@@ -1,25 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { ALL_BOOKS_BY_GENRE } from "../queries";
+import { useQuery } from "@apollo/client";
 
 const Books = (props) => {
-  const [genre, setGenre] = useState("all genres");
+  const [genre, setGenre] = useState("");
+  const [booksToShow, setBooksToShow] = useState([]);
+
+  const booksResult = useQuery(ALL_BOOKS_BY_GENRE, {
+    variables: { genre },
+  });
+
+  useEffect(() => {
+    if (booksResult.data) {
+      setBooksToShow(booksResult.data.allBooks);
+    }
+  }, [booksResult.data]); // eslint-disable-line
 
   if (!props.show) {
     return null;
   }
 
-  const booksToShow =
-    genre === "all genres"
-      ? props.books
-      : props.books.filter((b) => b.genres.includes(genre));
-
-  const genres = props.books
-    .reduce((allGenres, { genres: currentGenres }) => {
-      currentGenres.forEach((g) =>
-        allGenres.includes(g) ? null : allGenres.push(g)
-      );
-      return allGenres;
-    }, [])
-    .concat("all genres");
+  const genres = props.books.reduce((allGenres, { genres: currentGenres }) => {
+    currentGenres.forEach((g) =>
+      allGenres.includes(g) ? null : allGenres.push(g)
+    );
+    return allGenres;
+  }, []);
 
   return (
     <div>
@@ -48,6 +54,7 @@ const Books = (props) => {
             {g}
           </button>
         ))}
+        <button onClick={() => setGenre("")}>all genres</button>
       </div>
     </div>
   );
