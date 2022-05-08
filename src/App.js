@@ -7,7 +7,12 @@ import NewBook from "./components/NewBook";
 import LoginForm from "./components/LoginForm";
 import Recommend from "./components/Recommend";
 
-import { ALL_AUTHORS, ALL_BOOKS, BOOK_ADDED } from "./queries";
+import {
+  ALL_AUTHORS,
+  ALL_BOOKS,
+  BOOK_ADDED,
+  ALL_BOOKS_BY_GENRE,
+} from "./queries";
 
 const App = () => {
   const [token, setToken] = useState(null);
@@ -19,7 +24,22 @@ const App = () => {
 
   useSubscription(BOOK_ADDED, {
     onSubscriptionData: ({ subscriptionData }) => {
-      alert(subscriptionData.data.bookAdded.title + " was added");
+      const newBook = subscriptionData.data.bookAdded;
+      alert(`"${newBook.title}" was added`);
+
+      client.cache.updateQuery({ query: ALL_BOOKS }, ({ allBooks }) => {
+        return {
+          allBooks: allBooks.concat(newBook),
+        };
+      });
+      client.cache.updateQuery(
+        { query: ALL_BOOKS_BY_GENRE, variables: { genre: "" } },
+        ({ allBooks }) => {
+          return {
+            allBooks: allBooks.concat(newBook),
+          };
+        }
+      );
     },
   });
 
